@@ -24,24 +24,62 @@ function navInit() {
   });
 }
 
-async function fetchJson(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`${res.status} ${res.statusText}: ${text}`);
+function showError(message) {
+  let container = document.getElementById("globalAlert");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "globalAlert";
+    container.className = "container mt-3";
+    document.body.prepend(container);
   }
-  if (res.status === 204) return null;
-  return res.json();
+  container.innerHTML = `
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>`;
+  setTimeout(() => {
+    const alertEl = container.querySelector(".alert");
+    if (alertEl) alertEl.classList.remove("show");
+  }, 5000);
+}
+
+async function fetchJson(path, options = {}) {
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { "Content-Type": "application/json" },
+      ...options
+    });
+    if (!res.ok) {
+      let text;
+      try {
+        text = await res.text();
+      } catch {
+        text = "";
+      }
+      throw new Error(`${res.status} ${res.statusText}${text ? ": " + text : ""}`);
+    }
+    if (res.status === 204) return null;
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
+  } catch (e) {
+    showError(e.message || "Network error");
+    throw e;
+  }
 }
 
 // Products
 async function loadProducts() {
   const tbody = document.getElementById("productsTableBody");
   tbody.innerHTML = "";
-  const products = await fetchJson("/products");
+  let products = [];
+  try {
+    products = await fetchJson("/products");
+  } catch {
+    return;
+  }
   products.forEach(p => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -54,16 +92,20 @@ async function loadProducts() {
       </td>`;
     const [saveBtn, delBtn] = tr.querySelectorAll("button");
     saveBtn.addEventListener("click", async () => {
-      const name = tr.querySelector('input[data-field="name"]').value;
-      const price = parseFloat(tr.querySelector('input[data-field="price"]').value);
-      await fetchJson(`/products/${p.id}`, { method: "PUT", body: JSON.stringify({ name, price })});
-      await loadProducts();
-      await loadAssociationSelectors();
+      try {
+        const name = tr.querySelector('input[data-field="name"]').value;
+        const price = parseFloat(tr.querySelector('input[data-field="price"]').value);
+        await fetchJson(`/products/${p.id}`, { method: "PUT", body: JSON.stringify({ name, price })});
+        await loadProducts();
+        await loadAssociationSelectors();
+      } catch {}
     });
     delBtn.addEventListener("click", async () => {
-      await fetchJson(`/products/${p.id}`, { method: "DELETE" });
-      await loadProducts();
-      await loadAssociationSelectors();
+      try {
+        await fetchJson(`/products/${p.id}`, { method: "DELETE" });
+        await loadProducts();
+        await loadAssociationSelectors();
+      } catch {}
     });
     tbody.appendChild(tr);
   });
@@ -71,19 +113,26 @@ async function loadProducts() {
 
 document.getElementById("productForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const name = document.getElementById("productName").value.trim();
-  const price = parseFloat(document.getElementById("productPrice").value);
-  await fetchJson("/products", { method: "POST", body: JSON.stringify({ name, price })});
-  e.target.reset();
-  await loadProducts();
-  await loadAssociationSelectors();
+  try {
+    const name = document.getElementById("productName").value.trim();
+    const price = parseFloat(document.getElementById("productPrice").value);
+    await fetchJson("/products", { method: "POST", body: JSON.stringify({ name, price })});
+    e.target.reset();
+    await loadProducts();
+    await loadAssociationSelectors();
+  } catch {}
 });
 
 // Raw Materials
 async function loadRawMaterials() {
   const tbody = document.getElementById("rawMaterialsTableBody");
   tbody.innerHTML = "";
-  const rms = await fetchJson("/raw-materials");
+  let rms = [];
+  try {
+    rms = await fetchJson("/raw-materials");
+  } catch {
+    return;
+  }
   rms.forEach(rm => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -96,16 +145,20 @@ async function loadRawMaterials() {
       </td>`;
     const [saveBtn, delBtn] = tr.querySelectorAll("button");
     saveBtn.addEventListener("click", async () => {
-      const name = tr.querySelector('input[data-field="name"]').value;
-      const stockQuantity = parseInt(tr.querySelector('input[data-field="stock"]').value, 10);
-      await fetchJson(`/raw-materials/${rm.id}`, { method: "PUT", body: JSON.stringify({ name, stockQuantity })});
-      await loadRawMaterials();
-      await loadAssociationSelectors();
+      try {
+        const name = tr.querySelector('input[data-field="name"]').value;
+        const stockQuantity = parseInt(tr.querySelector('input[data-field="stock"]').value, 10);
+        await fetchJson(`/raw-materials/${rm.id}`, { method: "PUT", body: JSON.stringify({ name, stockQuantity })});
+        await loadRawMaterials();
+        await loadAssociationSelectors();
+      } catch {}
     });
     delBtn.addEventListener("click", async () => {
-      await fetchJson(`/raw-materials/${rm.id}`, { method: "DELETE" });
-      await loadRawMaterials();
-      await loadAssociationSelectors();
+      try {
+        await fetchJson(`/raw-materials/${rm.id}`, { method: "DELETE" });
+        await loadRawMaterials();
+        await loadAssociationSelectors();
+      } catch {}
     });
     tbody.appendChild(tr);
   });
@@ -113,45 +166,61 @@ async function loadRawMaterials() {
 
 document.getElementById("rawMaterialForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const name = document.getElementById("rawMaterialName").value.trim();
-  const stockQuantity = parseInt(document.getElementById("rawMaterialStock").value, 10);
-  await fetchJson("/raw-materials", { method: "POST", body: JSON.stringify({ name, stockQuantity })});
-  e.target.reset();
-  await loadRawMaterials();
-  await loadAssociationSelectors();
+  try {
+    const name = document.getElementById("rawMaterialName").value.trim();
+    const stockQuantity = parseInt(document.getElementById("rawMaterialStock").value, 10);
+    await fetchJson("/raw-materials", { method: "POST", body: JSON.stringify({ name, stockQuantity })});
+    e.target.reset();
+    await loadRawMaterials();
+    await loadAssociationSelectors();
+  } catch {}
 });
 
 // Associations
 async function loadAssociationSelectors() {
   const pSel = document.getElementById("associationProduct");
   const rSel = document.getElementById("associationRawMaterial");
-  const [products, rms] = await Promise.all([fetchJson("/products"), fetchJson("/raw-materials")]);
+  let products = [], rms = [];
+  try {
+    [products, rms] = await Promise.all([fetchJson("/products"), fetchJson("/raw-materials")]);
+  } catch {
+    return;
+  }
   pSel.innerHTML = products.map(p => `<option value="${p.id}">${p.name} (#${p.id})</option>`).join("");
   rSel.innerHTML = rms.map(r => `<option value="${r.id}">${r.name} (#${r.id})</option>`).join("");
 }
 
 document.getElementById("associationForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const productId = parseInt(document.getElementById("associationProduct").value, 10);
-  const rawMaterialId = parseInt(document.getElementById("associationRawMaterial").value, 10);
-  const quantityRequired = parseInt(document.getElementById("associationQuantity").value, 10);
-  await fetchJson("/product-raw-materials", { method: "POST", body: JSON.stringify({ productId, rawMaterialId, quantityRequired })});
-  e.target.reset();
-  alert("Association created.");
+  try {
+    const productId = parseInt(document.getElementById("associationProduct").value, 10);
+    const rawMaterialId = parseInt(document.getElementById("associationRawMaterial").value, 10);
+    const quantityRequired = parseInt(document.getElementById("associationQuantity").value, 10);
+    await fetchJson("/product-raw-materials", { method: "POST", body: JSON.stringify({ productId, rawMaterialId, quantityRequired })});
+    e.target.reset();
+    alert("Association created.");
+  } catch {}
 });
 
 document.getElementById("deleteAssociationBtn").addEventListener("click", async () => {
-  const id = parseInt(document.getElementById("deleteAssociationId").value, 10);
-  if (!id) return;
-  await fetchJson(`/product-raw-materials/${id}`, { method: "DELETE" });
-  alert("Association deleted if it existed.");
+  try {
+    const id = parseInt(document.getElementById("deleteAssociationId").value, 10);
+    if (!id) return;
+    await fetchJson(`/product-raw-materials/${id}`, { method: "DELETE" });
+    alert("Association deleted if it existed.");
+  } catch {}
 });
 
 // Production
 async function loadProduction() {
   const tbody = document.getElementById("productionTableBody");
   tbody.innerHTML = "";
-  const list = await fetchJson("/production/suggestions");
+  let list = [];
+  try {
+    list = await fetchJson("/production/suggestions");
+  } catch {
+    return;
+  }
   list.forEach(item => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -163,7 +232,9 @@ async function loadProduction() {
   });
 }
 document.getElementById("refreshSuggestions").addEventListener("click", async () => {
-  await loadProduction();
+  try {
+    await loadProduction();
+  } catch {}
 });
 
 async function loadAll() {
@@ -171,4 +242,4 @@ async function loadAll() {
 }
 
 navInit();
-loadAll().catch(err => console.error(err));
+loadAll().catch(e => showError(e.message || "Error"));
