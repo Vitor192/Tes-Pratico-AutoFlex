@@ -97,5 +97,5 @@ git remote set-url origin https://github.com/SEU_USUARIO/SEU_REPO.git
 ## Observações
 - CORS habilitado globalmente para facilitar integração do front: `config/CorsConfig.java`.
 - RNFs atendidos: API separada do front, responsividade, persistência em SGBD, uso de framework moderno, código em inglês (classes, tabelas, colunas), e documentação com Swagger.
-- Melhorias sugeridas: paginação/ordenação nos GETs, listagem de associações, autenticação, testes e2e (Cypress), UI em React + Redux.
+
 
