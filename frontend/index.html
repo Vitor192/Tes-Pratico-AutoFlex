@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Industrial Inventory Front-End</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-dark navbar-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Inventory</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link active" data-section="products" href="#">Products</a></li>
+        <li class="nav-item"><a class="nav-link" data-section="rawMaterials" href="#">Raw Materials</a></li>
+        <li class="nav-item"><a class="nav-link" data-section="associations" href="#">Associations</a></li>
+        <li class="nav-item"><a class="nav-link" data-section="production" href="#">Production</a></li>
+      </ul>
+      <form class="d-flex" role="search">
+        <input id="apiBaseUrl" class="form-control me-2" type="search" placeholder="API Base URL" aria-label="API Base URL">
+        <button class="btn btn-outline-success" id="saveBaseUrl" type="button">Save</button>
+      </form>
+    </div>
+  </div>
+  </nav>
+
+<main class="container py-4">
+  <div id="section-products" class="section">
+    <h3>Products</h3>
+    <form id="productForm" class="row g-3">
+      <div class="col-md-5">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-control" id="productName" required />
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">Price</label>
+        <input type="number" step="0.01" class="form-control" id="productPrice" required />
+      </div>
+      <div class="col-md-2 d-grid align-end">
+        <button class="btn btn-primary w-100" type="submit">Create</button>
+      </div>
+    </form>
+    <div class="table-responsive mt-3">
+      <table class="table table-striped">
+        <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Actions</th></tr></thead>
+        <tbody id="productsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="section-rawMaterials" class="section d-none">
+    <h3>Raw Materials</h3>
+    <form id="rawMaterialForm" class="row g-3">
+      <div class="col-md-5">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-control" id="rawMaterialName" required />
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">Stock Quantity</label>
+        <input type="number" step="1" min="0" class="form-control" id="rawMaterialStock" required />
+      </div>
+      <div class="col-md-2 d-grid">
+        <button class="btn btn-primary w-100" type="submit">Create</button>
+      </div>
+    </form>
+    <div class="table-responsive mt-3">
+      <table class="table table-striped">
+        <thead><tr><th>ID</th><th>Name</th><th>Stock</th><th>Actions</th></tr></thead>
+        <tbody id="rawMaterialsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="section-associations" class="section d-none">
+    <h3>Associations</h3>
+    <p class="text-muted">Create association between product and raw material.</p>
+    <form id="associationForm" class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Product</label>
+        <select class="form-select" id="associationProduct"></select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Raw Material</label>
+        <select class="form-select" id="associationRawMaterial"></select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Quantity Required</label>
+        <input type="number" step="1" min="1" class="form-control" id="associationQuantity" required />
+      </div>
+      <div class="col-md-3 d-grid">
+        <button class="btn btn-primary w-100" type="submit">Create</button>
+      </div>
+    </form>
+    <div class="mt-4">
+      <h6>Delete Association by ID</h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <input class="form-control" type="number" id="deleteAssociationId" placeholder="Association ID"/>
+        </div>
+        <div class="col-md-2 d-grid">
+          <button id="deleteAssociationBtn" class="btn btn-danger">Delete</button>
+        </div>
+        <div class="col-md-4"><small class="text-muted">Listing associations is not required by API.</small></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="section-production" class="section d-none">
+    <h3>Production Suggestions</h3>
+    <div class="d-grid gap-2 d-md-flex">
+      <button id="refreshSuggestions" class="btn btn-secondary">Refresh</button>
+    </div>
+    <div class="table-responsive mt-3">
+      <table class="table table-striped">
+        <thead><tr><th>Product ID</th><th>Product</th><th>Qty</th><th>Total Value</th></tr></thead>
+        <tbody id="productionTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="./app.js" type="module"></script>
+</body>
+</html>
